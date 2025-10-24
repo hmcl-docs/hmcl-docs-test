@@ -235,28 +235,28 @@ jobs:
           path: /home/runner/gh-pages/PR${{ env.GITHUB_PR_NUMBER }}
       - name: Remove Duplicate Files
         run: |
-          cd /home/runner/gh-pages
-          find ./PR${{ env.GITHUB_PR_NUMBER }} -type f | while read file; do
+          find /home/runner/gh-pages/PR${{ env.GITHUB_PR_NUMBER }} -type f | while read file; do
             hash=$(sha256sum "$file" | cut -d' ' -f1)
             size=$(stat -c%s "$file")
             key="${hash}-${size}"
-            target="./data/files/$key"
+            target="/home/runner/gh-pages/data/files/$key"
             if [ ! -f "$target" ]; then
               mv "$file" "$target"
             else
               rm -f "$file"
             fi
-            ln -s "$target" "$file"
-            echo "PR${{ env.GITHUB_PR_NUMBER }}" >> "./data/refs/$key"
+            relative_target=$(realpath --relative-to="$(dirname "$file")" "$target")
+            ln -s "$relative_target" "$file"
+            echo "PR${{ env.GITHUB_PR_NUMBER }}" >> "/home/runner/gh-pages/data/refs/$key"
           done
-          for ref in ./data/refs/*; do
+          for ref in /home/runner/gh-pages/data/refs/*; do
             if [ ! -s "$ref" ]; then
               base=$(basename "$ref")
-              rm -f "./data/files/$base"
+              rm -f "/home/runner/gh-pages/data/files/$base"
               rm -f "$ref"
             fi
           done
-          echo "[$(date)] Preview PR${{ env.GITHUB_PR_NUMBER }}" > ./index.html
+          echo "[$(date)] Preview PR${{ env.GITHUB_PR_NUMBER }}" > /home/runner/gh-pages/index.html
       - id: upload-pages
         name: Upload Pages
         uses: actions/upload-pages-artifact@v4
