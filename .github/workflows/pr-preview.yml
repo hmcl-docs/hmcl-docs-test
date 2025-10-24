@@ -38,8 +38,7 @@ jobs:
       - name: Restore Pages
         continue-on-error: true
         run: |
-          git clone --branch pages --depth 1 https://github.com/${{ github.repository }}.git /home/runner/gh-pages
-          rm -rf /home/runner/gh-pages/.git
+          git clone -b pages https://github.com/${{ github.repository }}.git /home/runner/gh-pages
       - name: Prepare Pages
         run: |
           mkdir -p /home/runner/gh-pages/data/{files,refs}
@@ -56,14 +55,13 @@ jobs:
       - name: Save Pages
         run: |
           cd /home/runner/gh-pages
-          git init
+          [ ! -d ".git" ] && git init && git checkout -b pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b pages
           git add .
           git commit -m "Remove Preview #${{ env.GITHUB_PR_NUMBER }}"
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git push -f origin pages:pages
+          git push origin pages:pages
       - if: ${{ github.event_name == 'issue_comment' }}
         id: comment-message
         name: Comment Message (issue_comment)
@@ -224,8 +222,7 @@ jobs:
       - name: Restore Pages
         continue-on-error: true
         run: |
-          git clone --branch pages --depth 1 https://github.com/${{ github.repository }}.git /home/runner/gh-pages
-          rm -rf /home/runner/gh-pages/.git
+          git clone -b pages https://github.com/${{ github.repository }}.git /home/runner/gh-pages
       - name: Prepare Pages
         run: |
           mkdir -p /home/runner/gh-pages/data/{files,refs}
@@ -272,14 +269,13 @@ jobs:
       - name: Save Pages
         run: |
           cd /home/runner/gh-pages
-          git init
+          [ ! -d ".git" ] && git init && git checkout -b pages
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git checkout -b pages
           git add .
           git commit -m "Preview #${{ env.GITHUB_PR_NUMBER }}"
           git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git push -f origin pages:pages
+          git push origin pages:pages
       - if: ${{ steps.upload-pages.outputs.artifact_id }}
         name: Remove Pages Artifact
         uses: actions/github-script@v8
