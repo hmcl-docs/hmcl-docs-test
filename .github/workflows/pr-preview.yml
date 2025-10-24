@@ -35,13 +35,11 @@ jobs:
       contents: write
       pull-requests: write
     steps:
-      - id: restore-pages
-        name: Restore Pages
-        uses: actions/cache/restore@v4
-        with:
-          key: pages-${{ github.run_id }}
-          path: /home/runner/gh-pages
-          restore-keys: pages-
+      - name: Restore Pages
+        continue-on-error: true
+        run: |
+          git clone --branch pages --depth 1 https://github.com/${{ github.repository }}.git /home/runner/gh-pages
+          rm -rf /home/runner/gh-pages/.git
       - name: Prepare Pages
         run: |
           mkdir -p /home/runner/gh-pages/data/{files,refs}
@@ -56,10 +54,16 @@ jobs:
           done
           echo "[$(date)] Remove Preview PR${{ env.GITHUB_PR_NUMBER }}" > /home/runner/gh-pages/index.html
       - name: Save Pages
-        uses: actions/cache/save@v4
-        with:
-          key: pages-${{ github.run_id }}
-          path: /home/runner/gh-pages
+        run: |
+          cd /home/runner/gh-pages
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b pages
+          git add .
+          git commit -m "Remove Preview #${{ env.GITHUB_PR_NUMBER }}"
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push -f origin pages:pages
       - if: ${{ github.event_name == 'issue_comment' }}
         id: comment-message
         name: Comment Message (issue_comment)
@@ -83,16 +87,6 @@ jobs:
               repo: context.repo.repo,
               issue_number: context.issue.number,
               body: "[Preview] Preview has been removed."
-            });
-      - if: ${{ steps.restore-pages.outputs.cache-matched-key }}
-        name: Remove History Cache
-        uses: actions/github-script@v8
-        with:
-          script: |
-            github.rest.actions.deleteActionsCacheByKey({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              key: "${{ steps.restore-pages.outputs.cache-matched-key }}"
             });
       - if: ${{ contains(github.event.pull_request.labels.*.name, 'preview/remove') || contains(github.event.issue.labels.*.name, 'preview/remove') }}
         name: Remove Label (preview/remove)
@@ -227,24 +221,22 @@ jobs:
       id-token: write
       contents: write
     steps:
-      - id: restore-pages
-        name: Restore Pages
-        uses: actions/cache/restore@v4
-        with:
-          key: pages-${{ github.run_id }}
-          path: /home/runner/gh-pages
-          restore-keys: pages-
-      - name: Merge Site Before
+      - name: Restore Pages
+        continue-on-error: true
+        run: |
+          git clone --branch pages --depth 1 https://github.com/${{ github.repository }}.git /home/runner/gh-pages
+          rm -rf /home/runner/gh-pages/.git
+      - name: Prepare Pages
         run: |
           mkdir -p /home/runner/gh-pages/data/{files,refs}
           rm -rf /home/runner/gh-pages/PR${{ env.GITHUB_PR_NUMBER }}
           grep -rlw 'PR${{ env.GITHUB_PR_NUMBER }}' /home/runner/gh-pages/data/refs | xargs -r sed -i '/\<PR${{ env.GITHUB_PR_NUMBER }}\>/d'
-      - name: Merge Site
+      - name: Merge Pages
         uses: actions/download-artifact@v5
         with:
           name: site
           path: /home/runner/gh-pages/PR${{ env.GITHUB_PR_NUMBER }}
-      - name: Merge Site After
+      - name: Remove Duplicate Files
         run: |
           find /home/runner/gh-pages/PR${{ env.GITHUB_PR_NUMBER }} -type f | while read file; do
             hash=$(sha256sum "$file" | cut -d' ' -f1)
@@ -278,20 +270,16 @@ jobs:
         with:
           artifact_name: github-pages
       - name: Save Pages
-        uses: actions/cache/save@v4
-        with:
-          key: pages-${{ github.run_id }}
-          path: /home/runner/gh-pages
-      - if: ${{ steps.restore-pages.outputs.cache-matched-key }}
-        name: Remove History Cache
-        uses: actions/github-script@v8
-        with:
-          script: |
-            github.rest.actions.deleteActionsCacheByKey({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              key: "${{ steps.restore-pages.outputs.cache-matched-key }}"
-            });
+        run: |
+          cd /home/runner/gh-pages
+          git init
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b pages
+          git add .
+          git commit -m "Preview #${{ env.GITHUB_PR_NUMBER }}"
+          git remote add origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push -f origin pages:pages
       - if: ${{ steps.upload-pages.outputs.artifact_id }}
         name: Remove Pages Artifact
         uses: actions/github-script@v8
