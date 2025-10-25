@@ -5,6 +5,8 @@ labels: ["test"]
 body:
   - id: markdown
     type: markdown
+    attributes:
+      value: ""
   - id: textarea
     type: textarea
     attributes:
