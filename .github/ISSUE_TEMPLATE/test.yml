@@ -6,7 +6,7 @@ body:
   - id: markdown
     type: markdown
     attributes:
-      value: ""
+      value: "Markdown!"
   - id: textarea
     type: textarea
     attributes:
