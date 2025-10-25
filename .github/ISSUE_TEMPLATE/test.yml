@@ -3,7 +3,7 @@ title: "Test: "
 description: Test description.
 labels: ["test"]
 body:
-  - id: textarea
+  - id: tttt
     type: textarea
     attributes:
       label: Textarea label
