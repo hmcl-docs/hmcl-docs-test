@@ -1,0 +1,15 @@
+name: Test
+title: "Test: "
+description: Test description.
+labels: ["test"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to request a new feature!
+  - type: textarea
+    attributes:
+      label: Textarea label
+      placeholder: textarea placeholder.
+    validations:
+      required: true
