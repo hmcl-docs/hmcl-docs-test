@@ -3,10 +3,6 @@ title: "Test: "
 description: Test description.
 labels: ["test"]
 body:
-  - id: markdown
-    type: markdown
-    attributes:
-      value: "Markdown!"
   - id: textarea
     type: textarea
     attributes:
